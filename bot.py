@@ -718,6 +718,35 @@ config_group = app_commands.Group(
 )
 
 
+@config_group.command(name="show", description="Show this server's current Squawk configuration")
+@app_commands.checks.has_permissions(manage_guild=True)
+async def config_show(interaction: discord.Interaction):
+    guild_id = str(interaction.guild_id)
+    cfg = load_config()
+    news_cfg = load_news_config()
+    perms = load_permissions()
+    bl = load_blacklist()
+
+    guild_cfg = cfg.get(guild_id, {})
+    guild_news = news_cfg.get(guild_id, {})
+    guild_perms = perms.get(guild_id, {})
+    guild_bl = bl.get(guild_id, [])
+
+    ticker_ch = guild_cfg.get("channel_id")
+    market_ch = guild_news.get("channel_id") if guild_news.get("enabled") else None
+    role_id = guild_perms.get("allowed_role_id")
+    ch_whitelist = guild_perms.get("command_channels", [])
+
+    lines = [
+        f"**Ticker news channel:** {f'<#{ticker_ch}>' if ticker_ch else 'not set'}",
+        f"**Market news channel:** {f'<#{market_ch}>' if market_ch else 'not set'}",
+        f"**Allowed role:** {f'<@&{role_id}>' if role_id else 'none (Manage Server only)'}",
+        f"**Command channels:** {', '.join(f'<#{c}>' for c in ch_whitelist) if ch_whitelist else 'all channels'}",
+        f"**Blacklist:** {', '.join(f'`{p}`' for p in guild_bl) if guild_bl else 'none'}",
+    ]
+    await interaction.response.send_message("\n".join(lines), ephemeral=True)
+
+
 @config_group.command(name="role", description="Set or clear a role that can use Squawk commands (in addition to Manage Server)")
 @app_commands.describe(action="Set or clear the role", role="Role to grant Squawk command access to (required for set)")
 @rate_limited(CONFIG_COOLDOWN_SECONDS)
@@ -898,7 +927,6 @@ ticker_group = app_commands.Group(
 @ticker_group.command(name="recent", description="Show the 3 most recent articles for a ticker")
 @app_commands.describe(ticker="Ticker symbol, e.g. AAPL")
 @rate_limited(TICKER_RECENT_COOLDOWN_SECONDS)
-@authorized()
 async def ticker_recent(interaction: discord.Interaction, ticker: str):
     ticker = ticker.strip().upper()
     if not is_valid_ticker(ticker):
@@ -1002,7 +1030,6 @@ async def news_channel(
 
 @news_group.command(name="recent", description="Show the 3 most recent market news articles")
 @rate_limited(MARKET_RECENT_COOLDOWN_SECONDS)
-@authorized()
 async def news_recent(interaction: discord.Interaction):
     await interaction.response.defer()
 
@@ -1050,7 +1077,6 @@ bot.tree.add_command(config_group)
 @bot.tree.command(name="squawk", description="Show this server's Squawk configuration and status")
 @app_commands.guild_only()
 @rate_limited(STATUS_COOLDOWN_SECONDS)
-@authorized()
 async def squawk_status(interaction: discord.Interaction):
     guild_id = str(interaction.guild_id)
     config = load_config()
