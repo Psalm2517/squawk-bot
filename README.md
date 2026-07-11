@@ -1,5 +1,5 @@
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
-![Version](https://img.shields.io/badge/version-0.1.0--dev-orange)
+![Version](https://img.shields.io/badge/version-1.0.0-orange)
 ![License](https://img.shields.io/github/license/yerettegroup/squawk-bot)
 ![discord.py](https://img.shields.io/badge/discord.py-2.4%2B-5865F2)
 
@@ -26,15 +26,15 @@ A delegated role (set via `/config role`) can also use the commands below, subje
 |---|---|---|
 | `/watchlist ticker action:<add\|remove> ticker:TICKER` | Add/remove tickers from this server's watchlist (comma-separated, max 25). | 60s |
 | `/watchlist channel action:<set\|clear>` | Set the channel where ticker news is posted. | 15s |
-| `/watchlist show` | List tickers currently tracked in this server. | 60s |
+| `/watchlist show` | List tickers currently tracked in this server. Open to everyone. | 60s |
 | `/ticker recent ticker:TICKER` | Fetch the 3 most recent articles for any ticker on demand. Open to everyone. | 30s |
 | `/market channel action:<set\|clear>` | Set the channel where market news is posted. | 15s |
 | `/market recent` | Fetch the 3 most recent market news articles on demand. Open to everyone. | 30s |
-| `/config show` | Show this server's current Squawk configuration (ephemeral). | — |
+| `/config show` | Show this server's full configuration (ephemeral). Manage Server only. | — |
 | `/config role action:<set\|clear> role:@role` | Grant a role access to Squawk commands (in addition to Manage Server). | 15s |
-| `/config channel action:<add\|remove\|show\|clear>` | Whitelist channels where the delegated role can use commands. If no whitelist is set, they can use commands anywhere. | 15s |
+| `/config channel action:<all\|none\|add\|remove\|show\|clear>` | Set the default channel mode (`all` or `none`) and add/remove overrides. `all` + `add` blocks a channel; `none` + `add` whitelists one. | 15s |
 | `/config blacklist action:<add\|remove\|show\|clear> pattern:text` | Block articles from URLs containing a given substring (e.g. `trefis`). | 15s |
-| `/squawk` | Show bot status, uptime, channel config, and last poll time. Open to everyone. | 5s |
+| `/squawk` | Show bot version, uptime, tickers tracked, last poll, and any feeds in backoff. Open to everyone. | 5s |
 
 ## How it works
 

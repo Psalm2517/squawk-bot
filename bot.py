@@ -489,9 +489,6 @@ def rate_limited(seconds: float):
 
 
 async def check_authorized(interaction: discord.Interaction) -> bool:
-    """Manage Server always passes (and bypasses channel restriction too, as a safety
-    valve against admins locking themselves out). Otherwise: the command must be run in
-    an allowed channel (if any are configured) and the user must hold the allowed role."""
     member = interaction.user
     if not isinstance(member, discord.Member):
         return False
@@ -501,14 +498,24 @@ async def check_authorized(interaction: discord.Interaction) -> bool:
     permissions = load_permissions()
     guild_perms = permissions.get(str(interaction.guild_id), {})
 
-    allowed_channels = guild_perms.get("command_channels") or []
-    if allowed_channels and interaction.channel_id not in allowed_channels:
-        return False
-
     allowed_role_id = guild_perms.get("allowed_role_id")
     if not allowed_role_id:
         return False
-    return any(role.id == allowed_role_id for role in member.roles)
+    if not any(role.id == allowed_role_id for role in member.roles):
+        return False
+
+    channel_mode = guild_perms.get("channel_mode", "all")
+    override_channels = guild_perms.get("command_channels") or []
+    if channel_mode == "all":
+        if override_channels and interaction.channel_id in override_channels:
+            return False
+    else:
+        if override_channels and interaction.channel_id not in override_channels:
+            return False
+        elif not override_channels:
+            return False
+
+    return True
 
 
 def authorized():
@@ -657,7 +664,6 @@ async def watchlist_ticker(interaction: discord.Interaction, action: app_command
 
 @watchlist_group.command(name="show", description="Show this server's tracked tickers")
 @rate_limited(WATCHLIST_COOLDOWN_SECONDS)
-@authorized()
 async def watchlist_show(interaction: discord.Interaction):
     guild_id = str(interaction.guild_id)
     watchlist = load_watchlist()
@@ -735,13 +741,20 @@ async def config_show(interaction: discord.Interaction):
     ticker_ch = guild_cfg.get("channel_id")
     market_ch = guild_news.get("channel_id") if guild_news.get("enabled") else None
     role_id = guild_perms.get("allowed_role_id")
-    ch_whitelist = guild_perms.get("command_channels", [])
+    channel_mode = guild_perms.get("channel_mode", "all")
+    override_channels = guild_perms.get("command_channels", [])
+
+    if override_channels:
+        override_label = "Blacklisted" if channel_mode == "all" else "Whitelisted"
+        ch_text = f"{channel_mode} ({override_label}: {', '.join(f'<#{c}>' for c in override_channels)})"
+    else:
+        ch_text = channel_mode
 
     lines = [
         f"**Ticker news channel:** {f'<#{ticker_ch}>' if ticker_ch else 'not set'}",
         f"**Market news channel:** {f'<#{market_ch}>' if market_ch else 'not set'}",
-        f"**Allowed role:** {f'<@&{role_id}>' if role_id else 'none (Manage Server only)'}",
-        f"**Command channels:** {', '.join(f'<#{c}>' for c in ch_whitelist) if ch_whitelist else 'all channels'}",
+        f"**Allowed role:** {f'<@&{role_id}>' if role_id else 'none — Manage Server only'}",
+        f"**Command channels:** {ch_text}",
         f"**Blacklist:** {', '.join(f'`{p}`' for p in guild_bl) if guild_bl else 'none'}",
     ]
     await interaction.response.send_message("\n".join(lines), ephemeral=True)
@@ -785,13 +798,15 @@ async def config_role(
         )
 
 
-@config_group.command(name="channel", description="Whitelist channels where role members can use Squawk commands (Manage Server is always unrestricted)")
+@config_group.command(name="channel", description="Control which channels role members can use Squawk commands in (Manage Server is always unrestricted)")
 @app_commands.describe(
-    action="Add/remove a channel from the whitelist, show the list, or clear it",
+    action="Set the default mode, or add/remove a channel override",
     channel="Channel to add/remove (required for add/remove)",
 )
 @rate_limited(CONFIG_COOLDOWN_SECONDS)
 @app_commands.choices(action=[
+    app_commands.Choice(name="all", value="all"),
+    app_commands.Choice(name="none", value="none"),
     app_commands.Choice(name="add", value="add"),
     app_commands.Choice(name="remove", value="remove"),
     app_commands.Choice(name="show", value="show"),
@@ -807,47 +822,60 @@ async def config_channel(
     permissions = load_permissions()
     guild_perms = permissions.get(guild_id, {})
     channels = guild_perms.get("command_channels", [])
+    mode = guild_perms.get("channel_mode", "all")
 
-    if action.value == "add":
+    if action.value in ("all", "none"):
+        guild_perms["channel_mode"] = action.value
+        guild_perms["command_channels"] = []
+        permissions[guild_id] = guild_perms
+        save_permissions(permissions)
+        logger.info("Command channel mode set to %s for guild %s", action.value, guild_id)
+        if action.value == "all":
+            await interaction.response.send_message(
+                "Channel mode set to **all** — role members can use Squawk commands in any channel. Use `add` to block specific channels."
+            )
+        else:
+            await interaction.response.send_message(
+                "Channel mode set to **none** — role members cannot use Squawk commands anywhere. Use `add` to whitelist specific channels."
+            )
+    elif action.value == "add":
         if channel is None:
-            await interaction.response.send_message("You must specify a channel when using `add`.", ephemeral=True)
+            await interaction.response.send_message("You must specify a channel.", ephemeral=True)
             return
         if channel.id not in channels:
             channels.append(channel.id)
         guild_perms["command_channels"] = channels
         permissions[guild_id] = guild_perms
         save_permissions(permissions)
-        logger.info("Command channel restriction: added #%s (%s) for guild %s", channel.name, channel.id, guild_id)
-        await interaction.response.send_message(
-            f"Added {channel.mention} to the channel whitelist. Role members can only use Squawk commands in whitelisted channels. Manage Server members are unrestricted."
-        )
+        logger.info("Command channel override: added #%s (%s) for guild %s", channel.name, channel.id, guild_id)
+        verb = "whitelisted" if mode == "none" else "blocked"
+        await interaction.response.send_message(f"{channel.mention} {verb}.")
     elif action.value == "remove":
         if channel is None:
-            await interaction.response.send_message("You must specify a channel when using `remove`.", ephemeral=True)
+            await interaction.response.send_message("You must specify a channel.", ephemeral=True)
             return
         if channel.id in channels:
             channels.remove(channel.id)
         guild_perms["command_channels"] = channels
         permissions[guild_id] = guild_perms
         save_permissions(permissions)
-        logger.info("Command channel restriction: removed #%s (%s) for guild %s", channel.name, channel.id, guild_id)
-        await interaction.response.send_message(f"Removed {channel.mention} from the channel whitelist.")
+        logger.info("Command channel override: removed #%s (%s) for guild %s", channel.name, channel.id, guild_id)
+        await interaction.response.send_message(f"Removed {channel.mention} from the channel override list.")
     elif action.value == "clear":
         guild_perms["command_channels"] = []
         permissions[guild_id] = guild_perms
         save_permissions(permissions)
-        logger.info("Command channel restriction cleared for guild %s", guild_id)
-        await interaction.response.send_message(
-            "Channel whitelist cleared — role members can now use Squawk commands in any channel."
-        )
+        logger.info("Command channel overrides cleared for guild %s", guild_id)
+        await interaction.response.send_message("Channel override list cleared.")
     else:
+        override_label = "blacklisted" if mode == "all" else "whitelisted"
         if not channels:
             await interaction.response.send_message(
-                "No channel whitelist set — role members can use Squawk commands in any channel."
+                f"Mode: **{mode}**. No channel overrides set."
             )
         else:
             mentions = ", ".join(f"<#{cid}>" for cid in channels)
-            await interaction.response.send_message(f"Whitelisted channels (role members only): {mentions}")
+            await interaction.response.send_message(f"Mode: **{mode}**. {override_label.capitalize()} channels: {mentions}")
 
 
 @config_group.command(name="blacklist", description="Block articles whose link contains a given text (e.g. a spammy source)")
@@ -1079,33 +1107,14 @@ bot.tree.add_command(config_group)
 @rate_limited(STATUS_COOLDOWN_SECONDS)
 async def squawk_status(interaction: discord.Interaction):
     guild_id = str(interaction.guild_id)
-    config = load_config()
-    watchlist = load_watchlist()
-    news_config = load_news_config()
+    tickers = load_watchlist().get(guild_id, [])
 
-    channel_id = config.get(guild_id, {}).get("channel_id")
-    channel_text = f"<#{channel_id}>" if channel_id else "*not configured*"
-
-    guild_news_config = news_config.get(guild_id, {})
-    news_channel_id = guild_news_config.get("channel_id")
-    news_text = f"<#{news_channel_id}>" if guild_news_config.get("enabled") and news_channel_id else "*disabled*"
-
-    tickers = watchlist.get(guild_id, [])
-    blacklist_count = len(load_blacklist().get(guild_id, []))
-
-    if last_poll_time:
-        poll_text = f"<t:{int(last_poll_time.timestamp())}:R>"
-    else:
-        poll_text = "never (bot just started)"
+    poll_text = f"<t:{int(last_poll_time.timestamp())}:R>" if last_poll_time else "pending"
 
     lines = [
-        "**Squawk status**",
-        f"Version: [{VERSION}](<https://github.com/yerettegroup/squawk-bot>)",
+        f"[{VERSION}](<https://github.com/yerettegroup/squawk-bot>)",
         f"Uptime: <t:{int(PROCESS_START_TIME.timestamp())}:R>",
-        f"Ticker news channel: {channel_text}",
         f"Tickers tracked: {len(tickers)}",
-        f"Market news channel: {news_text}",
-        f"Blacklist patterns: {blacklist_count}",
         f"Last poll: {poll_text}",
     ]
 
@@ -1114,7 +1123,7 @@ async def squawk_status(interaction: discord.Interaction):
         failing.append("market news")
     if failing:
         issues = ", ".join(f"`{t}`" for t in failing)
-        lines.append(f"Feeds currently failing/backing off: {issues}")
+        lines.append(f"Feeds in backoff: {issues}")
 
     await interaction.response.send_message("\n".join(lines))
 
