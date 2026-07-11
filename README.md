@@ -11,11 +11,40 @@ A Discord bot that posts stock and market news from Yahoo Finance to a per-serve
 
 ## Self-hosting
 
-1. Clone this repo.
-2. Copy `.env.example` to `.env` and fill in `DISCORD_TOKEN` (from your own Discord app at [discord.dev](https://discord.dev)). `ALERT_USER_ID` is optional — set it to your Discord user ID to DM you when a feed starts failing.
-3. `pip install -r requirements.txt`
-4. `python bot.py`
-5. In each server, set the destination channels with `/watchlist channel` and `/market channel`.
+### Requirements
+
+- Python 3.10+
+- A Discord application and bot token ([discord.dev](https://discord.dev))
+
+### Installation
+
+```bash
+git clone https://github.com/yerettegroup/squawk-bot.git
+cd squawk-bot
+pip install -r requirements.txt
+cp .env.example .env
+```
+
+Edit `.env` and set `DISCORD_TOKEN` to your bot's token. Optionally set `ALERT_USER_ID` to your Discord user ID to receive a DM when a feed enters failure backoff.
+
+### Running
+
+```bash
+python bot.py
+```
+
+For production, run under a process supervisor such as `systemd`. An example unit file is included in the [Running as a service](#running-as-a-service) section below.
+
+### First-time server setup
+
+Once the bot is in your Discord server, an admin should run:
+
+```
+/watchlist channel action:set channel:#your-channel
+/market channel action:set channel:#your-channel
+```
+
+Then add tickers with `/watchlist ticker action:add ticker:AAPL,MSFT,...`.
 
 ## Commands
 
@@ -55,8 +84,28 @@ All state lives in flat JSON files (no database), created automatically and giti
 
 ## Running as a service
 
+Example `systemd` unit file (`/etc/systemd/system/squawk.service`):
+
+```ini
+[Unit]
+Description=Squawk Discord Bot
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/squawk
+ExecStart=/opt/squawk/venv/bin/python /opt/squawk/bot.py
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
 ```
+
+Enable and manage:
+
+```bash
+systemctl enable --now squawk
 systemctl status squawk
-systemctl restart squawk
 journalctl -u squawk -f
 ```
