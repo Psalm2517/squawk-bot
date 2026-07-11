@@ -30,8 +30,8 @@ PERMISSIONS_PATH = BASE_DIR / "permissions.json"
 BLACKLIST_PATH = BASE_DIR / "blacklist.json"
 VERSION_PATH = BASE_DIR / "VERSION"
 
-_max_tickers_raw = os.getenv("MAX_TICKERS_PER_CALL")
-MAX_TICKERS_PER_CALL = int(_max_tickers_raw) if _max_tickers_raw else 0
+_max_tickers_raw = os.getenv("MAX_TICKERS_PER_SERVER")
+MAX_TICKERS_PER_SERVER = int(_max_tickers_raw) if _max_tickers_raw else 0
 
 RSS_URL_TEMPLATE = "https://feeds.finance.yahoo.com/rss/2.0/headline?s={ticker}&region=US&lang=en-US"
 QUOTE_CHECK_URL = "https://query1.finance.yahoo.com/v8/finance/chart/{ticker}"
@@ -563,12 +563,6 @@ async def watchlist_ticker(interaction: discord.Interaction, action: app_command
     if not requested:
         await interaction.response.send_message("Please provide at least one ticker symbol.", ephemeral=True)
         return
-    if MAX_TICKERS_PER_CALL and len(requested) > MAX_TICKERS_PER_CALL:
-        await interaction.response.send_message(
-            f"Too many tickers at once - max {MAX_TICKERS_PER_CALL} per command.", ephemeral=True
-        )
-        return
-
     guild_id = str(interaction.guild_id)
     watchlist = load_watchlist()
     guild_list = watchlist.get(guild_id, [])
@@ -577,6 +571,15 @@ async def watchlist_ticker(interaction: discord.Interaction, action: app_command
         invalid = [t for t in requested if not is_valid_ticker(t)]
         already = [t for t in requested if t in guild_list and is_valid_ticker(t)]
         candidates = [t for t in requested if is_valid_ticker(t) and t not in guild_list]
+
+        if MAX_TICKERS_PER_SERVER and len(guild_list) + len(candidates) > MAX_TICKERS_PER_SERVER:
+            remaining = max(0, MAX_TICKERS_PER_SERVER - len(guild_list))
+            await interaction.response.send_message(
+                f"This server can track at most {MAX_TICKERS_PER_SERVER} tickers "
+                f"({len(guild_list)} currently tracked, {remaining} slots left).",
+                ephemeral=True,
+            )
+            return
 
         if not candidates:
             parts = []

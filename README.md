@@ -9,6 +9,8 @@ A Discord bot that posts stock and market news from Yahoo Finance to a per-serve
 
 > **Don't want to self-host?** There's a free hosted instance you can invite to your server - no signup, no paywall. *(Invite link coming soon.)*
 
+See [PRIVACY.md](PRIVACY.md) and [TERMS.md](TERMS.md) for the hosted instance's policies.
+
 ## Self-hosting
 
 ### Requirements
@@ -28,7 +30,7 @@ cp .env.example .env
 Edit `.env` and set `DISCORD_TOKEN` to your bot's token. Optional:
 
 - `ALERT_USER_ID` - your Discord user ID, DMed when a feed enters failure backoff.
-- `MAX_TICKERS_PER_CALL` - cap on tickers per `/watchlist ticker add` (leave blank for no cap).
+- `MAX_TICKERS_PER_SERVER` - cap on total tickers tracked per server (leave blank for no cap).
 
 ### Running
 
