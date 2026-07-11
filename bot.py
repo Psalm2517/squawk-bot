@@ -1070,7 +1070,7 @@ async def squawk_status(interaction: discord.Interaction):
 
     lines = [
         "**Squawk status**",
-        f"Version: {VERSION}",
+        f"Version: [{VERSION}](<https://github.com/yerettegroup/squawk-bot>)",
         f"Uptime: <t:{int(PROCESS_START_TIME.timestamp())}:R>",
         f"Ticker news channel: {channel_text}",
         f"Tickers tracked: {len(tickers)}",
