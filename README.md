@@ -5,7 +5,7 @@
 
 # Squawk
 
-A Discord bot that polls Yahoo Finance RSS feeds for a per-server stock ticker watchlist and general market news, posting new articles as `[Headline](<link>)` messages to configured channels.
+A Discord bot that posts stock and market news from Yahoo Finance to a per-server ticker watchlist.
 
 > **Don't want to self-host?** There's a free hosted instance you can invite to your server — no signup, no paywall. *(Invite link coming soon.)*
 
