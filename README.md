@@ -7,7 +7,7 @@
 
 A Discord bot that posts stock and market news from Yahoo Finance to a per-server ticker watchlist.
 
-> **Don't want to self-host?** There's a free hosted instance you can [invite to your server](https://discord.com/oauth2/authorize?client_id=1524897979880968444) - no signup, no paywall.
+> **Don't want to self-host?** There's a free hosted instance you can [invite to your server](https://discord.com/oauth2/authorize?client_id=1524897979880968444).
 
 See [PRIVACY.md](PRIVACY.md) and [TERMS.md](TERMS.md) for the hosted instance's policies.
 
@@ -16,7 +16,6 @@ See [PRIVACY.md](PRIVACY.md) and [TERMS.md](TERMS.md) for the hosted instance's 
 ### Requirements
 
 - Python 3.10+
-- A Discord application and bot token ([discord.dev](https://discord.dev))
 
 ### Installation
 
