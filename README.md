@@ -56,15 +56,15 @@ Then add tickers with `/watchlist ticker action:add ticker:AAPL,MSFT,...`.
 
 | Command | Description | Cooldown |
 |---|---|---|
-| `/watchlist ticker action:<add\|remove> ticker:TICKER` | *admin* - Add/remove tickers (comma-separated). | 60s |
-| `/watchlist channel action:<set\|clear>` | *admin* - Set the channel ticker news posts to. | 15s |
+| `/watchlist ticker action:<add\|remove> ticker:TICKER` | *admin* - Add/remove tickers (comma-separated). | - |
+| `/watchlist channel action:<set\|clear>` | *admin* - Set the channel ticker news posts to. | - |
 | `/watchlist show` | List tracked tickers. | 60s |
-| `/ticker recent ticker:TICKER` | Fetch the 3 most recent articles for any ticker. | 30s |
-| `/market channel action:<set\|clear>` | *admin* - Set the channel market news posts to. | 15s |
-| `/market recent` | Fetch the 3 most recent market news articles. | 30s |
+| `/ticker recent ticker:TICKER` | Fetch the 3 most recent articles for any ticker. | 60s |
+| `/market channel action:<set\|clear>` | *admin* - Set the channel market news posts to. | - |
+| `/market recent` | Fetch the 3 most recent market news articles. | 60s |
 | `/config show` | *admin* - Show this server's full configuration (ephemeral). | - |
-| `/config channel mode:<all\|none> exceptions:<#a #b …>` | *admin* - Set where regular users can use read-only commands. `all` = allowed everywhere; `none` = blocked everywhere. Exceptions flip the rule for the listed channels. Pass either param on its own, or both. | 15s |
-| `/config blacklist action:<add\|remove\|show\|clear> pattern:text` | *admin* - Skip articles whose URL contains a given substring (e.g. `trefis`). | 15s |
+| `/config channel mode:<all\|none> exceptions:<#a #b …>` | *admin* - Set where regular users can use read-only commands. `all` = allowed everywhere; `none` = blocked everywhere. Exceptions flip the rule for the listed channels. Pass either param on its own, or both. | - |
+| `/config blacklist action:<add\|remove\|show\|clear> pattern:text` | *admin* - Skip articles whose URL contains a given substring (e.g. `trefis`). | - |
 | `/squawk` | Show bot version, uptime, tickers tracked, last poll, and any feeds in backoff. | 5s |
 
 ## How it works

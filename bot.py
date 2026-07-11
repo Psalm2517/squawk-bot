@@ -50,9 +50,9 @@ WATCHDOG_STALE_MULTIPLIER = 3
 
 WATCHLIST_COOLDOWN_SECONDS = 60.0
 WATCHLIST_CHANNEL_COOLDOWN_SECONDS = 15.0
-TICKER_RECENT_COOLDOWN_SECONDS = 30.0
+TICKER_RECENT_COOLDOWN_SECONDS = 60.0
 MARKET_CHANNEL_COOLDOWN_SECONDS = 15.0
-MARKET_RECENT_COOLDOWN_SECONDS = 30.0
+MARKET_RECENT_COOLDOWN_SECONDS = 60.0
 STATUS_COOLDOWN_SECONDS = 5.0
 CONFIG_COOLDOWN_SECONDS = 15.0
 
@@ -552,7 +552,6 @@ def parse_ticker_input(raw: str) -> list[str]:
 
 @watchlist_group.command(name="ticker", description="Add or remove tickers (comma-separate for multiple: AAPL,MSFT)")
 @app_commands.describe(action="Add or remove", ticker="Ticker(s), comma-separated for multiple, e.g. AAPL,MSFT,BRK-B")
-@rate_limited(WATCHLIST_COOLDOWN_SECONDS)
 @app_commands.choices(action=[
     app_commands.Choice(name="add", value="add"),
     app_commands.Choice(name="remove", value="remove"),
@@ -677,7 +676,6 @@ async def watchlist_show(interaction: discord.Interaction):
 
 @watchlist_group.command(name="channel", description="Set or clear the channel news articles are posted to for this server")
 @app_commands.describe(action="Set or clear the news channel", channel="Channel to post news articles to (required for set)")
-@rate_limited(WATCHLIST_CHANNEL_COOLDOWN_SECONDS)
 @app_commands.choices(action=[
     app_commands.Choice(name="set", value="set"),
     app_commands.Choice(name="clear", value="clear"),
@@ -784,7 +782,6 @@ def parse_channel_mentions(raw: str, guild: discord.Guild) -> tuple[list[int], l
     mode="'all' = allowed everywhere, 'none' = blocked everywhere. Exceptions flip the rule for listed channels.",
     exceptions="Space or comma-separated #channel mentions. Empty string clears the list.",
 )
-@rate_limited(CONFIG_COOLDOWN_SECONDS)
 @app_commands.choices(mode=[
     app_commands.Choice(name="all", value="all"),
     app_commands.Choice(name="none", value="none"),
@@ -841,7 +838,6 @@ async def config_channel(
     action="Add or remove a pattern, show the current list, or clear it entirely",
     pattern="Text that must appear in the article's URL for it to be skipped (required for add/remove)",
 )
-@rate_limited(CONFIG_COOLDOWN_SECONDS)
 @app_commands.choices(action=[
     app_commands.Choice(name="add", value="add"),
     app_commands.Choice(name="remove", value="remove"),
@@ -967,7 +963,6 @@ news_group = app_commands.Group(
 
 @news_group.command(name="channel", description="Set or clear the channel market news is posted to")
 @app_commands.describe(action="Set or clear the news channel", channel="Channel to post market news to (required for set)")
-@rate_limited(MARKET_CHANNEL_COOLDOWN_SECONDS)
 @app_commands.choices(action=[
     app_commands.Choice(name="set", value="set"),
     app_commands.Choice(name="clear", value="clear"),
