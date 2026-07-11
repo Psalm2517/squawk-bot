@@ -481,7 +481,11 @@ async def before_watchdog():
 
 
 def rate_limited(seconds: float):
-    return app_commands.checks.cooldown(1, seconds)
+    def _key(interaction: discord.Interaction):
+        if isinstance(interaction.user, discord.Member) and interaction.user.guild_permissions.manage_guild:
+            return None
+        return app_commands.Cooldown(1, seconds)
+    return app_commands.checks.dynamic_cooldown(_key)
 
 
 async def check_authorized(interaction: discord.Interaction) -> bool:
