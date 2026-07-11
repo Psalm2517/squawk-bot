@@ -7,14 +7,15 @@
 
 A Discord bot that polls Yahoo Finance RSS feeds for a per-server stock ticker watchlist and general market news, posting new articles as `[Headline](<link>)` messages to configured channels.
 
-## Setup
+> **Don't want to self-host?** There's a free hosted instance you can invite to your server — no signup, no paywall. *(Invite link coming soon.)*
 
-1. Create a Discord app at [discord.dev](https://discord.dev). No privileged intents required.
-2. Invite the bot with the `bot` and `applications.commands` scopes, plus `Send Messages` permission.
-3. Copy `.env.example` to `.env` and fill in `DISCORD_TOKEN`. `ALERT_USER_ID` is optional — set it to your Discord user ID to receive a DM when a feed starts failing.
-4. Install dependencies: `pip install -r requirements.txt`
-5. Run: `python bot.py`
-6. In each server, use `/watchlist channel` and `/market channel` to configure where posts go.
+## Self-hosting
+
+1. Clone this repo.
+2. Copy `.env.example` to `.env` and fill in `DISCORD_TOKEN` (from your own Discord app at [discord.dev](https://discord.dev)). `ALERT_USER_ID` is optional — set it to your Discord user ID to DM you when a feed starts failing.
+3. `pip install -r requirements.txt`
+4. `python bot.py`
+5. In each server, set the destination channels with `/watchlist channel` and `/market channel`.
 
 ## Commands
 
