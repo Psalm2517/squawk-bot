@@ -1,11 +1,15 @@
-![Python](https://img.shields.io/badge/python-3.10%2B-blue)
+<div align="center">
+
+# Squawk ✦
+
+**A Discord bot that posts stock and market news from Yahoo Finance and GlobalNewswire to a per-server ticker watchlist.**
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 ![Version](https://img.shields.io/badge/version-1.0.0-orange)
-![License](https://img.shields.io/github/license/yerettegroup/squawk-bot)
+![Python](https://img.shields.io/badge/python-3.10%2B-blue)
 ![discord.py](https://img.shields.io/badge/discord.py-2.4%2B-5865F2)
 
-# Squawk
-
-A Discord bot that posts stock and market news from Yahoo Finance and GlobalNewswire to a per-server ticker watchlist.
+</div>
 
 See [PRIVACY.md](PRIVACY.md) and [TERMS.md](TERMS.md) for the hosted instance's policies.
 
@@ -114,4 +118,10 @@ journalctl -u squawk -f
 
 ## License
 
-Squawk is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0). Commercial use without copyleft restrictions requires a separate commercial license.
+Squawk is licensed under the [MIT License](./LICENSE).
+
+<div align="center">
+
+![yerette](mage.svg)
+
+</div>
